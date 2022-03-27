@@ -25,27 +25,42 @@ int main() {
         std::cerr << errno << '\n';
         return errno;
     }
-    int i = 0;
-    while( i++ < 10/* ( mem->status & ALL_READY ) != ALL_READY  */) {
+    while( ( mem->status & ALL_READY ) != ALL_READY ) {
         if( msync( mem, sizeof( memory ), MS_INVALIDATE ) ) {
             std::cerr << errno << '\n';
             return errno;
         }
     }
-    // while( true ) {
-    //     if( mem->status & SOMEONE_CLOSED ) {
-    //         mem->status |= A_CLOSED;
-    //         break;
-    //     }
-    //     while( !mem->status );
-    //     std::cout << "C: " << mem->line << '\n';
-    //     int count = 0;
-    //     while( mem->line[ count++ ] && ( count < 1024 ) );
-    //     mem->CtoB = count;
-    //     while( !( mem->AtoB ) && !( mem->CtoB ) );
-    //     mem->status = false;
-    // }
-    // mem->status |= C_CLOSED;
+    bool all_good = true;
+    while( true ) {
+        while( !( mem->status & C_TURN ) ) {
+            if( msync( mem, sizeof( memory ), MS_INVALIDATE ) ) {
+                std::cerr << errno << '\n';
+                return errno;
+            }
+            if( mem->status & SOMEONE_CLOSED ) {
+                all_good = false;
+                break;
+            }
+        }
+        if( !all_good ) break;
+        std::cout << "C: " << mem->line << '\n';
+        int count = 0;
+        while( mem->line[ count++ ] && ( count < 1024 ) );
+        mem->CtoB = count;
+
+        mem->status &= ~C_TURN;
+        mem->status |= B_TURN;
+        if( msync( mem, sizeof( memory ), MS_INVALIDATE ) ) {
+            std::cerr << errno << '\n';
+            return errno;
+        }
+    }
+    mem->status |= C_CLOSED;
+    if( msync( mem, sizeof( memory ), MS_INVALIDATE ) ) {
+        std::cerr << errno << '\n';
+        return errno;
+    }
     munmap( &mem, sizeof( memory ) );
     close( fd );
     return 0;

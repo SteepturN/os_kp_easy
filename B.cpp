@@ -18,29 +18,47 @@ int main() {
     memory* mem = reinterpret_cast< memory* >( mmap( 0, sizeof( memory ), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0 ) );
     if( !mem ) return 2;
     mem->status = mem->status | B_READY;
+
     if( msync( mem, sizeof( memory ), MS_INVALIDATE ) ) {
         std::cerr << errno << '\n';
         return errno;
     }
-    int i = 0;
-    while( i++ < 10/* ( mem->status & ALL_READY ) != ALL_READY  */) {
+    while( ( mem->status & ALL_READY ) != ALL_READY ) {
         if( msync( mem, sizeof( memory ), MS_INVALIDATE ) ) {
             std::cerr << errno << '\n';
             return errno;
         }
     }
-    // while( true ) {
-    //     if( mem->status & SOMEONE_CLOSED ) {
-    //         break;
-    //     }
-    //     while( !mem->AtoB );
-    //     std::cout << "B: A sent " << mem->AtoB << " signs\n";
-    //     mem->AtoB = 0;
-    //     while( !mem->CtoB );
-    //     std::cout << "B: C got " << mem->CtoB << " signs\n";
-    //     mem->CtoB = 0;
-    // }
-    // mem->status |= B_CLOSED;
+    bool all_good = true;
+    while( true ) {
+        while( !( mem->status & B_TURN ) ) {
+            if( msync( mem, sizeof( memory ), MS_INVALIDATE ) ) {
+                std::cerr << errno << '\n';
+                return errno;
+            }
+            if( mem->status & SOMEONE_CLOSED ) {
+                all_good = false;
+                break;
+            }
+        }
+        if( !all_good ) break;
+        std::cout << "B: A sent " << mem->AtoB << " signs\n";
+        mem->AtoB = 0;
+        std::cout << "B: C got " << mem->CtoB << " signs\n";
+        mem->CtoB = 0;
+
+        mem->status &= ~B_TURN;
+        mem->status |= A_TURN;
+        if( msync( mem, sizeof( memory ), MS_INVALIDATE ) ) {
+            std::cerr << errno << '\n';
+            return errno;
+        }
+    }
+    mem->status |= B_CLOSED;
+    if( msync( mem, sizeof( memory ), MS_INVALIDATE ) ) {
+        std::cerr << errno << '\n';
+        return errno;
+    }
     munmap( &mem, sizeof( memory ) );
     close( fd );
     return 0;
