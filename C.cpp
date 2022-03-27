@@ -25,26 +25,28 @@ int main() {
         std::cerr << errno << '\n';
         return errno;
     }
-    while( true/* ( mem->status & ALL_READY ) != ALL_READY  */) {
+    int i = 0;
+    while( i++ < 10/* ( mem->status & ALL_READY ) != ALL_READY  */) {
         if( msync( mem, sizeof( memory ), MS_INVALIDATE ) ) {
             std::cerr << errno << '\n';
             return errno;
         }
     }
-    while( true ) {
-        if( mem->status & SOMEONE_CLOSED ) {
-            mem->status |= A_CLOSED;
-            break;
-        }
-        while( !mem->status );
-        std::cout << "C: " << mem->line << '\n';
-        int count = 0;
-        while( mem->line[ count++ ] && ( count < 1024 ) );
-        mem->CtoB = count;
-        while( !( mem->AtoB ) && !( mem->CtoB ) );
-        mem->status = false;
-    }
-    mem->status |= C_CLOSED;
+    // while( true ) {
+    //     if( mem->status & SOMEONE_CLOSED ) {
+    //         mem->status |= A_CLOSED;
+    //         break;
+    //     }
+    //     while( !mem->status );
+    //     std::cout << "C: " << mem->line << '\n';
+    //     int count = 0;
+    //     while( mem->line[ count++ ] && ( count < 1024 ) );
+    //     mem->CtoB = count;
+    //     while( !( mem->AtoB ) && !( mem->CtoB ) );
+    //     mem->status = false;
+    // }
+    // mem->status |= C_CLOSED;
+    munmap( &mem, sizeof( memory ) );
     close( fd );
     return 0;
 }

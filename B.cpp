@@ -22,24 +22,26 @@ int main() {
         std::cerr << errno << '\n';
         return errno;
     }
-    while( true/* ( mem->status & ALL_READY ) != ALL_READY  */) {
+    int i = 0;
+    while( i++ < 10/* ( mem->status & ALL_READY ) != ALL_READY  */) {
         if( msync( mem, sizeof( memory ), MS_INVALIDATE ) ) {
             std::cerr << errno << '\n';
             return errno;
         }
     }
-    while( true ) {
-        if( mem->status & SOMEONE_CLOSED ) {
-            break;
-        }
-        while( !mem->AtoB );
-        std::cout << "B: A sent " << mem->AtoB << " signs\n";
-        mem->AtoB = 0;
-        while( !mem->CtoB );
-        std::cout << "B: C got " << mem->CtoB << " signs\n";
-        mem->CtoB = 0;
-    }
-    mem->status |= B_CLOSED;
+    // while( true ) {
+    //     if( mem->status & SOMEONE_CLOSED ) {
+    //         break;
+    //     }
+    //     while( !mem->AtoB );
+    //     std::cout << "B: A sent " << mem->AtoB << " signs\n";
+    //     mem->AtoB = 0;
+    //     while( !mem->CtoB );
+    //     std::cout << "B: C got " << mem->CtoB << " signs\n";
+    //     mem->CtoB = 0;
+    // }
+    // mem->status |= B_CLOSED;
+    munmap( &mem, sizeof( memory ) );
     close( fd );
     return 0;
 }
