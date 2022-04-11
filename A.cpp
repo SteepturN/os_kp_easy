@@ -16,10 +16,8 @@ int main() {
     int fd = open( "./.file", O_RDWR | O_CREAT | O_TRUNC , S_IRWXU );
     write( fd, "", sizeof( "" ) );
     memory* mem = ( memory* )mmap( 0, sizeof( memory ), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0 );
+    close( fd );
     if( !mem ) return 2;
-    for( int i = 0; i < 1024; ++i ) {
-        mem->line[ i ] = 0;
-    }
     mem->status |= A_READY | A_TURN;
     mem->AtoB = 0;
     mem->CtoB = 0;
@@ -69,6 +67,5 @@ int main() {
         return errno;
     }
     munmap( &mem, sizeof( memory ) );
-    close( fd );
     return 0;
 }

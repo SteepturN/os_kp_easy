@@ -16,6 +16,7 @@ int main() {
     int fd = open( "./.file", O_RDWR /* | O_CREAT | O_TRUNC */, S_IRWXU );
     write( fd, "", sizeof( "" ) );
     memory* mem = reinterpret_cast< memory* >( mmap( 0, sizeof( memory ), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0 ) );
+    close( fd );
     if( !mem ) return 2;
     for( int i = 0; i < sizeof( memory ); ++i ) {
         ( int )( ( ( char* )mem )[ i ] );
@@ -62,6 +63,5 @@ int main() {
         return errno;
     }
     munmap( &mem, sizeof( memory ) );
-    close( fd );
     return 0;
 }

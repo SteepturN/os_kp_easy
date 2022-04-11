@@ -14,8 +14,9 @@
 //1024 byte - string; 1 byte - A wait or not; 4 byte - B from A; 4 byte - C from A
 int main() {
     int fd = open( "./.file", O_RDWR /* | O_CREAT | O_TRUNC  */, S_IRWXU );
-    write( fd, "\0", sizeof( "\0" ) );
+    write( fd, "", sizeof( "" ) );
     memory* mem = reinterpret_cast< memory* >( mmap( 0, sizeof( memory ), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0 ) );
+    close( fd );
     if( !mem ) return 2;
     mem->status = mem->status | B_READY;
 
@@ -60,6 +61,5 @@ int main() {
         return errno;
     }
     munmap( &mem, sizeof( memory ) );
-    close( fd );
     return 0;
 }

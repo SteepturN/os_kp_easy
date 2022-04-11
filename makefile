@@ -11,5 +11,7 @@ B: B.cpp
 	g++ -g -Wall -pedantic -o B B.cpp
 C: C.cpp
 	g++ -g -Wall -pedantic -o C C.cpp
+clean:
+	rm A B C .file
 
 # end
